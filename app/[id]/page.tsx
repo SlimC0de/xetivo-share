@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 interface Product {
   product_name: string;
   image_uri: string[] | null;
-  description: string;
 }
 
 async function fetchProduct(productId: string): Promise<Product> {
@@ -17,8 +16,9 @@ async function fetchProduct(productId: string): Promise<Product> {
     throw new Error("Missing Supabase environment variables");
   }
 
+  // ✅ Only return product_name and image_uri — NOT description
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/products?product_id=eq.${productId}&select=*`,
+    `${SUPABASE_URL}/rest/v1/products?product_id=eq.${productId}&select=product_name,image_uri`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -81,11 +81,10 @@ export default async function ProductPage({
     <>
       <head>
         <title>{product.product_name} | Xetivo</title>
-        <meta name="description" content={product.description.slice(0, 160)} />
       </head>
 
       <main style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem 1rem" }}>
-        {/* Image – full width, no title above it */}
+        {/* Image */}
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -97,7 +96,6 @@ export default async function ProductPage({
               width: "100%",
               height: "auto",
               borderRadius: "20px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
               marginBottom: "2.5rem",
             }}
           />
@@ -119,36 +117,19 @@ export default async function ProductPage({
           </div>
         )}
 
-        {/* Title – now correctly placed BELOW the image */}
+        {/* Product Name */}
         <h1
           style={{
             fontSize: "2.8rem",
             fontWeight: 700,
             textAlign: "center",
-            margin: "0 0 2.5rem 0",
+            margin: "0",
             color: "#111827",
             lineHeight: "1.2",
           }}
         >
           {product.product_name}
         </h1>
-
-        {/* Description Card */}
-        <div
-          style={{
-            padding: "2.5rem",
-            backgroundColor: "white",
-            borderRadius: "20px",
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-            lineHeight: "1.9",
-            fontSize: "1.15rem",
-            color: "#374151",
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {product.description}
-        </div>
       </main>
     </>
   );
