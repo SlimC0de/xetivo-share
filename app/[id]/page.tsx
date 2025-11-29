@@ -1,6 +1,7 @@
 // app/[id]/page.tsx
 
 import Image from "next/image";
+import Head from "next/head"; // ✅ Correct head usage
 import { notFound } from "next/navigation";
 
 interface Product {
@@ -12,29 +13,19 @@ async function fetchProduct(productId: string): Promise<Product> {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new Error("Missing Supabase environment variables");
-  }
-
-  // ✅ Only return product_name and image_uri — NOT description
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/products?product_id=eq.${productId}&select=product_name,image_uri`,
     {
       headers: {
-        apikey: SUPABASE_ANON_KEY,
+        apikey: SUPABASE_ANON_KEY!,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
       cache: "no-store",
     }
   );
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Supabase error ${res.status}: ${text}`);
-  }
-
-  const data: Product[] = await res.json();
-  if (data.length === 0) notFound();
+  const data = await res.json();
+  if (!data.length) notFound();
 
   return data[0];
 }
@@ -45,87 +36,69 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!id || id === "undefined") notFound();
+  if (!id) notFound();
 
-  let product: Product | null = null;
-  let errorMessage: string | null = null;
-
-  try {
-    product = await fetchProduct(id);
-  } catch (error) {
-    console.error("Fetch error:", error);
-    errorMessage =
-      error instanceof Error && error.message.includes("400")
-        ? "Invalid product ID"
-        : "Failed to load product";
-  }
-
-  if (!product) {
-    return (
-      <div
-        style={{
-          padding: "4rem",
-          textAlign: "center",
-          color: "#dc2626",
-          fontSize: "1.5rem",
-        }}
-      >
-        {errorMessage || "Product not found"}
-      </div>
-    );
-  }
-
+  const product = await fetchProduct(id);
   const imageUrl = product.image_uri?.[0];
 
   return (
     <>
-      <head>
+      <Head>
         <title>{product.product_name} | Xetivo</title>
-      </head>
+      </Head>
 
-      <main style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem 1rem" }}>
-        {/* Image */}
+      <main
+        style={{
+          maxWidth: "600px",
+          margin: "0 auto",
+          padding: "1.5rem",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        {/* IMAGE */}
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt={product.product_name}
-            width={900}
-            height={900}
+            width={800}
+            height={800}
             priority
             style={{
               width: "100%",
               height: "auto",
-              borderRadius: "20px",
-              marginBottom: "2.5rem",
+              borderRadius: "14px",
+              marginBottom: "1.2rem",
             }}
           />
         ) : (
           <div
             style={{
-              height: 500,
-              backgroundColor: "#f3f4f6",
-              borderRadius: 20,
-              marginBottom: "2.5rem",
+              height: 330,
+              background: "#f3f3f3",
+              borderRadius: "14px",
+              marginBottom: "1.2rem",
               display: "flex",
-              alignItems: "center",
               justifyContent: "center",
-              color: "#6b7280",
-              fontSize: "1.5rem",
+              alignItems: "center",
+              color: "#888",
+              fontSize: "1.2rem",
             }}
           >
-            No image available
+            No image
           </div>
         )}
 
-        {/* Product Name */}
+        {/* PRODUCT NAME — clean, visible, centered */}
         <h1
           style={{
-            fontSize: "2.8rem",
+            fontSize: "1.8rem",
             fontWeight: 700,
             textAlign: "center",
-            margin: "0",
-            color: "#111827",
-            lineHeight: "1.2",
+            background: "#ffffff",
+            padding: "0.8rem 1rem",
+            borderRadius: "10px",
+            color: "#111",
+            boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
           }}
         >
           {product.product_name}
