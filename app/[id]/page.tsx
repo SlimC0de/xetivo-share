@@ -1,5 +1,3 @@
-// app/[id]/page.tsx
-
 import Image from "next/image";
 import Head from "next/head";
 import { notFound } from "next/navigation";
@@ -41,7 +39,6 @@ export default async function ProductPage({
   const product = await fetchProduct(id);
   const imageUrl = product.image_uri?.[0] ?? "/fallback.jpg";
 
-  // 🔥 Absolute URL for OG (required)
   const absoluteOGImage = imageUrl.startsWith("http")
     ? imageUrl
     : `https://xetivo-share.vercel.app${imageUrl}`;
@@ -50,24 +47,23 @@ export default async function ProductPage({
 
   return (
     <>
-      {/* ************************************
-          ⭐ FULL SOCIAL MEDIA OG METADATA ⭐
-         ************************************ */}
+      {/* ===========================
+          OG + META TAGS
+      ============================ */}
       <Head>
         <title>{product.product_name} | Xetivo</title>
 
-        {/* --- Essential OG Tags --- */}
         <meta property="og:title" content={product.product_name} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={pageUrl} />
         <meta property="og:image" content={absoluteOGImage} />
+        <meta property="og:url" content={pageUrl} />
         <meta property="og:site_name" content="Xetivo" />
         <meta
           property="og:description"
           content="Check out this product on Xetivo."
         />
 
-        {/* --- Twitter Cards --- */}
+        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={product.product_name} />
         <meta
@@ -77,6 +73,27 @@ export default async function ProductPage({
         <meta name="twitter:image" content={absoluteOGImage} />
       </Head>
 
+      {/* ===========================
+          AUTO APP REDIRECT SCRIPT
+      ============================ */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              const productId = "${id}";
+              
+              // Try to open the app instantly
+              window.location.href = "xetivo://product/" + productId;
+
+              // If app does NOT open, redirect to website in 1.2s
+              setTimeout(() => {
+                window.location.href = "https://xetivo.app/product/" + productId;
+              }, 1200);
+            })();
+          `,
+        }}
+      />
+
       <main
         style={{
           maxWidth: "600px",
@@ -85,40 +102,20 @@ export default async function ProductPage({
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        {/* IMAGE */}
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={product.product_name}
-            width={800}
-            height={800}
-            priority
-            style={{
-              width: "100%",
-              height: "auto",
-              borderRadius: "14px",
-              marginBottom: "1.2rem",
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              height: 330,
-              background: "#f3f3f3",
-              borderRadius: "14px",
-              marginBottom: "1.2rem",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              color: "#888",
-              fontSize: "1.2rem",
-            }}
-          >
-            No image
-          </div>
-        )}
+        <Image
+          src={imageUrl}
+          alt={product.product_name}
+          width={800}
+          height={800}
+          priority
+          style={{
+            width: "100%",
+            height: "auto",
+            borderRadius: "14px",
+            marginBottom: "1.2rem",
+          }}
+        />
 
-        {/* PRODUCT NAME */}
         <h1
           style={{
             fontSize: "1.8rem",
