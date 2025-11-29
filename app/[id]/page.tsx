@@ -1,7 +1,7 @@
 // app/[id]/page.tsx
 
 import Image from "next/image";
-import Head from "next/head"; // ✅ Correct head usage
+import Head from "next/head";
 import { notFound } from "next/navigation";
 
 interface Product {
@@ -39,12 +39,42 @@ export default async function ProductPage({
   if (!id) notFound();
 
   const product = await fetchProduct(id);
-  const imageUrl = product.image_uri?.[0];
+  const imageUrl = product.image_uri?.[0] ?? "/fallback.jpg";
+
+  // 🔥 Absolute URL for OG (required)
+  const absoluteOGImage = imageUrl.startsWith("http")
+    ? imageUrl
+    : `https://xetivo-share.vercel.app${imageUrl}`;
+
+  const pageUrl = `https://xetivo-share.vercel.app/${id}`;
 
   return (
     <>
+      {/* ************************************
+          ⭐ FULL SOCIAL MEDIA OG METADATA ⭐
+         ************************************ */}
       <Head>
         <title>{product.product_name} | Xetivo</title>
+
+        {/* --- Essential OG Tags --- */}
+        <meta property="og:title" content={product.product_name} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:image" content={absoluteOGImage} />
+        <meta property="og:site_name" content="Xetivo" />
+        <meta
+          property="og:description"
+          content="Check out this product on Xetivo."
+        />
+
+        {/* --- Twitter Cards --- */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={product.product_name} />
+        <meta
+          name="twitter:description"
+          content="Check out this product on Xetivo."
+        />
+        <meta name="twitter:image" content={absoluteOGImage} />
       </Head>
 
       <main
@@ -88,7 +118,7 @@ export default async function ProductPage({
           </div>
         )}
 
-        {/* PRODUCT NAME — clean, visible, centered */}
+        {/* PRODUCT NAME */}
         <h1
           style={{
             fontSize: "1.8rem",
